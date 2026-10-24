@@ -1,0 +1,38 @@
+{
+  "info": {
+    "name": "BizBuilder API",
+    "description": "MVP API smoke flow. Set baseUrl and complete Register before private requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000/api" },
+    { "key": "token", "value": "" },
+    { "key": "businessId", "value": "" },
+    { "key": "websiteId", "value": "" },
+    { "key": "slug", "value": "" }
+  ],
+  "item": [
+    { "name": "Health", "request": { "method": "GET", "url": "{{baseUrl}}/health" } },
+    {
+      "name": "Register",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Account created', () => pm.response.to.have.status(201));", "const data = pm.response.json().data;", "pm.collectionVariables.set('token', data.token);"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Sample Owner\",\n  \"email\": \"owner-{{$guid}}@example.test\",\n  \"password\": \"change-this-password-123\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/auth/register" }
+    },
+    { "name": "Current user", "request": { "method": "GET", "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "url": "{{baseUrl}}/auth/me" } },
+    {
+      "name": "Create business",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Business created', () => pm.response.to.have.status(201));", "pm.collectionVariables.set('businessId', pm.response.json().data.id);"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "body": { "mode": "raw", "raw": "{\n  \"name\": \"Sample Studio\",\n  \"category\": \"Studio\",\n  \"description\": \"A sample business profile\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/businesses" }
+    },
+    { "name": "List businesses", "request": { "method": "GET", "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "url": "{{baseUrl}}/businesses" } },
+    {
+      "name": "Create website",
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('Website created', () => pm.response.to.have.status(201));", "const site = pm.response.json().data;", "pm.collectionVariables.set('websiteId', site.id);", "pm.collectionVariables.set('slug', site.slug);"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "body": { "mode": "raw", "raw": "{\n  \"name\": \"Sample Studio Website\",\n  \"template\": \"starter\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/businesses/{{businessId}}/websites" }
+    },
+    { "name": "List website pages", "request": { "method": "GET", "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "url": "{{baseUrl}}/websites/{{websiteId}}/pages" } },
+    { "name": "Add product", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "body": { "mode": "raw", "raw": "{\n  \"name\": \"Sample service\",\n  \"description\": \"A service example\",\n  \"type\": \"service\",\n  \"price\": 45\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/businesses/{{businessId}}/products" } },
+    { "name": "Publish website", "request": { "method": "PATCH", "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "url": "{{baseUrl}}/websites/{{websiteId}}/publish" } },
+    { "name": "View published site", "request": { "method": "GET", "url": "{{baseUrl}}/public/sites/{{slug}}" } }
+  ]
+}

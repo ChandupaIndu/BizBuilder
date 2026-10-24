@@ -1,0 +1,151 @@
+openapi: 3.0.3
+info:
+  title: BizBuilder API
+  version: 0.1.0
+  description: Multi-tenant business website builder API
+servers:
+  - url: http://localhost:4000/api
+    description: Local Express service
+  - url: https://gateway.example.com/bizbuilder/v1
+    description: Future WSO2 API Manager gateway
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Envelope:
+      type: object
+      properties:
+        success: { type: boolean }
+        data: { type: object, nullable: true }
+        error: { type: object, nullable: true }
+paths:
+  /health:
+    get:
+      summary: Check API availability
+      responses:
+        '200': { description: API is healthy }
+  /auth/register:
+    post:
+      summary: Register an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+      responses:
+        '201': { description: Account created }
+        '409': { description: Email already in use }
+  /auth/login:
+    post:
+      summary: Sign in
+      responses:
+        '200': { description: JWT and user returned }
+        '401': { description: Invalid credentials }
+  /auth/me:
+    get:
+      security: [{ bearerAuth: [] }]
+      summary: Get current user
+      responses:
+        '200': { description: Current user }
+  /businesses:
+    get:
+      security: [{ bearerAuth: [] }]
+      summary: List owned businesses
+      responses:
+        '200': { description: Business list }
+    post:
+      security: [{ bearerAuth: [] }]
+      summary: Create a business
+      responses:
+        '201': { description: Business created }
+  /businesses/{businessId}/websites:
+    parameters:
+      - in: path
+        name: businessId
+        required: true
+        schema: { type: string }
+    get:
+      security: [{ bearerAuth: [] }]
+      summary: List websites in an owned business
+      responses:
+        '200': { description: Website list }
+    post:
+      security: [{ bearerAuth: [] }]
+      summary: Create a draft website
+      responses:
+        '201': { description: Website created }
+  /businesses/{businessId}/products:
+    parameters:
+      - in: path
+        name: businessId
+        required: true
+        schema: { type: string }
+    get:
+      security: [{ bearerAuth: [] }]
+      summary: List business products and services
+      responses:
+        '200': { description: Product list }
+    post:
+      security: [{ bearerAuth: [] }]
+      summary: Create a product or service
+      responses:
+        '201': { description: Product created }
+  /websites/{websiteId}/pages:
+    parameters:
+      - in: path
+        name: websiteId
+        required: true
+        schema: { type: string }
+    get:
+      security: [{ bearerAuth: [] }]
+      summary: List website pages
+      responses:
+        '200': { description: Page list }
+    post:
+      security: [{ bearerAuth: [] }]
+      summary: Add a page to an owned website
+      responses:
+        '201': { description: Page created }
+  /websites/{websiteId}/publish:
+    patch:
+      security: [{ bearerAuth: [] }]
+      summary: Publish an owned website
+      responses:
+        '200': { description: Website published }
+  /websites/{websiteId}/pages/{pageId}:
+    parameters:
+      - in: path
+        name: websiteId
+        required: true
+        schema: { type: string }
+      - in: path
+        name: pageId
+        required: true
+        schema: { type: string }
+    patch:
+      security: [{ bearerAuth: [] }]
+      summary: Update content on a page in an owned website
+      responses:
+        '200': { description: Page updated }
+        '404': { description: Website or page not found }
+  /websites/{websiteId}/unpublish:
+    patch:
+      security: [{ bearerAuth: [] }]
+      summary: Unpublish an owned website
+      responses:
+        '200': { description: Website moved to draft }
+  /public/sites/{slug}:
+    get:
+      summary: View public content for a published website
+      responses:
+        '200': { description: Public website }
+        '404': { description: Website is missing or still draft }
